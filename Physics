@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9702 A* Masterplan — Cambridge AS Physics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #16161f;
+    --border: #1e1e2e;
+    --accent: #c8a96e;
+    --accent2: #7eb8c9;
+    --accent3: #c97eb8;
+    --red: #c97e7e;
+    --green: #7ec9a0;
+    --text: #e8e6df;
+    --muted: #888899;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --serif: 'Playfair Display', serif;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: var(–sans);
+font-size: 15px;
+line-height: 1.7;
+overflow-x: hidden;
+}
+
+/* ── HERO ── */
+.hero {
+position: relative;
+padding: 80px 40px 60px;
+border-bottom: 1px solid var(–border);
+overflow: hidden;
+}
+.hero::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background:
+radial-gradient(ellipse 60% 80% at 80% 20%, rgba(200,169,110,.08) 0%, transparent 60%),
+radial-gradient(ellipse 40% 60% at 10% 90%, rgba(126,184,201,.06) 0%, transparent 55%);
+pointer-events: none;
+}
+.hero-eyebrow {
+font-family: var(–mono);
+font-size: 11px;
+letter-spacing: .2em;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 16px;
+}
+.hero h1 {
+font-family: var(–serif);
+font-size: clamp(38px, 6vw, 72px);
+line-height: 1.05;
+color: var(–text);
+max-width: 700px;
+}
+.hero h1 em {
+color: var(–accent);
+font-style: italic;
+}
+.hero-sub {
+margin-top: 20px;
+color: var(–muted);
+font-size: 14px;
+font-family: var(–mono);
+max-width: 600px;
+}
+.exam-pills {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 32px;
+}
+.pill {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 8px 18px;
+border-radius: 40px;
+font-family: var(–mono);
+font-size: 12px;
+border: 1px solid;
+animation: fadeUp .6s ease both;
+}
+.pill-p33 { border-color: var(–red); color: var(–red); background: rgba(201,126,126,.07); }
+.pill-p22 { border-color: var(–accent); color: var(–accent); background: rgba(200,169,110,.07); }
+.pill-p12 { border-color: var(–accent2); color: var(–accent2); background: rgba(126,184,201,.07); }
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s ease infinite; }
+
+/* ── NAV TABS ── */
+.nav-tabs {
+position: sticky;
+top: 0;
+z-index: 100;
+background: rgba(10,10,15,.95);
+backdrop-filter: blur(12px);
+border-bottom: 1px solid var(–border);
+display: flex;
+overflow-x: auto;
+padding: 0 24px;
+gap: 0;
+scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+padding: 14px 20px;
+font-family: var(–mono);
+font-size: 11px;
+letter-spacing: .1em;
+text-transform: uppercase;
+color: var(–muted);
+background: none;
+border: none;
+border-bottom: 2px solid transparent;
+cursor: pointer;
+white-space: nowrap;
+transition: all .2s;
+}
+.tab-btn:hover { color: var(–text); }
+.tab-btn.active { color: var(–accent); border-bottom-color: var(–accent); }
+
+/* ── SECTIONS ── */
+.section { display: none; padding: 48px 40px 80px; max-width: 1100px; margin: 0 auto; }
+.section.active { display: block; animation: fadeUp .4s ease; }
+
+/* ── SECTION HEADERS ── */
+.sec-header {
+display: flex;
+align-items: baseline;
+gap: 16px;
+margin-bottom: 40px;
+padding-bottom: 16px;
+border-bottom: 1px solid var(–border);
+}
+.sec-num {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+letter-spacing: .15em;
+}
+.sec-title {
+font-family: var(–serif);
+font-size: clamp(24px, 4vw, 40px);
+color: var(–text);
+}
+.sec-badge {
+margin-left: auto;
+font-family: var(–mono);
+font-size: 10px;
+padding: 4px 10px;
+border-radius: 4px;
+}
+.badge-urgent { background: rgba(201,126,126,.15); color: var(–red); border: 1px solid rgba(201,126,126,.3); }
+.badge-theory { background: rgba(200,169,110,.15); color: var(–accent); border: 1px solid rgba(200,169,110,.3); }
+.badge-mcq { background: rgba(126,184,201,.15); color: var(–accent2); border: 1px solid rgba(126,184,201,.3); }
+
+/* ── CARDS ── */
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 24px 28px;
+margin-bottom: 20px;
+position: relative;
+overflow: hidden;
+}
+.card::before {
+content: ‘’;
+position: absolute;
+left: 0; top: 0; bottom: 0;
+width: 3px;
+}
+.card-red::before { background: var(–red); }
+.card-gold::before { background: var(–accent); }
+.card-blue::before { background: var(–accent2); }
+.card-purple::before { background: var(–accent3); }
+.card-green::before { background: var(–green); }
+
+.card-title {
+font-family: var(–mono);
+font-size: 11px;
+letter-spacing: .15em;
+text-transform: uppercase;
+color: var(–muted);
+margin-bottom: 12px;
+}
+.card h3 {
+font-family: var(–serif);
+font-size: 20px;
+color: var(–text);
+margin-bottom: 10px;
+}
+
+/* ── CHECKLIST ── */
+.checklist { list-style: none; }
+.checklist li {
+display: flex;
+gap: 12px;
+padding: 8px 0;
+border-bottom: 1px solid rgba(255,255,255,.04);
+font-size: 14px;
+}
+.checklist li:last-child { border-bottom: none; }
+.check-icon {
+flex-shrink: 0;
+width: 20px;
+height: 20px;
+border-radius: 4px;
+border: 1px solid var(–border);
+display: flex;
+align-items: center;
+justify-content: center;
+margin-top: 2px;
+font-size: 11px;
+color: var(–green);
+background: rgba(126,201,160,.08);
+border-color: rgba(126,201,160,.25);
+}
+.check-label { flex: 1; }
+.check-label strong { color: var(–accent); }
+.check-label code {
+font-family: var(–mono);
+font-size: 12px;
+background: rgba(255,255,255,.06);
+padding: 1px 6px;
+border-radius: 3px;
+color: var(–accent2);
+}
+
+/* ── RULE BOX ── */
+.rule-box {
+background: rgba(200,169,110,.06);
+border: 1px solid rgba(200,169,110,.2);
+border-radius: 6px;
+padding: 16px 20px;
+margin: 16px 0;
+font-family: var(–mono);
+font-size: 13px;
+line-height: 1.8;
+}
+.rule-box .rule-title {
+font-size: 10px;
+letter-spacing: .2em;
+text-transform: uppercase;
+color: var(–accent);
+margin-bottom: 8px;
+}
+
+/* ── TABLE ── */
+.data-table {
+width: 100%;
+border-collapse: collapse;
+font-size: 13px;
+margin: 16px 0;
+}
+.data-table th {
+font-family: var(–mono);
+font-size: 10px;
+letter-spacing: .15em;
+text-transform: uppercase;
+color: var(–muted);
+padding: 10px 16px;
+text-align: left;
+border-bottom: 1px solid var(–border);
+}
+.data-table td {
+padding: 12px 16px;
+border-bottom: 1px solid rgba(255,255,255,.04);
+vertical-align: top;
+line-height: 1.6;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,.02); }
+.td-num {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–accent);
+width: 30px;
+}
+.td-limit { color: var(–red); font-weight: 500; }
+.td-improve { color: var(–green); }
+
+/* ── COMPARE BOXES ── */
+.compare-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 16px;
+margin: 16px 0;
+}
+@media(max-width:680px) { .compare-grid { grid-template-columns: 1fr; } }
+.compare-bad {
+background: rgba(201,126,126,.06);
+border: 1px solid rgba(201,126,126,.25);
+border-radius: 6px;
+padding: 16px 18px;
+}
+.compare-good {
+background: rgba(126,201,160,.06);
+border: 1px solid rgba(126,201,160,.25);
+border-radius: 6px;
+padding: 16px 18px;
+}
+.compare-label {
+font-family: var(–mono);
+font-size: 10px;
+letter-spacing: .2em;
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+.compare-bad .compare-label { color: var(–red); }
+.compare-good .compare-label { color: var(–green); }
+.compare-text { font-size: 13px; line-height: 1.75; }
+.compare-text mark {
+background: rgba(200,169,110,.25);
+color: var(–accent);
+padding: 0 2px;
+border-radius: 2px;
+}
+.compare-text del { color: var(–muted); opacity: .6; }
+
+/* ── TRAP CARDS ── */
+.trap-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+gap: 16px;
+margin: 16px 0;
+}
+.trap-card {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 20px;
+position: relative;
+}
+.trap-card::after {
+content: ‘⚠’;
+position: absolute;
+top: 14px;
+right: 16px;
+font-size: 16px;
+opacity: .3;
+}
+.trap-title {
+font-family: var(–mono);
+font-size: 12px;
+color: var(–red);
+margin-bottom: 8px;
+letter-spacing: .05em;
+}
+.trap-body { font-size: 13px; color: var(–muted); line-height: 1.7; }
+.trap-body strong { color: var(–text); }
+.trap-body code {
+font-family: var(–mono);
+font-size: 12px;
+background: rgba(255,255,255,.06);
+padding: 1px 5px;
+border-radius: 3px;
+color: var(–accent2);
+}
+
+/* ── FORECAST TABLE ── */
+.forecast-item {
+display: grid;
+grid-template-columns: 200px 1fr auto;
+gap: 16px;
+align-items: center;
+padding: 14px 0;
+border-bottom: 1px solid rgba(255,255,255,.05);
+}
+@media(max-width:600px) { .forecast-item { grid-template-columns: 1fr; } }
+.forecast-item:last-child { border-bottom: none; }
+.forecast-topic { font-weight: 500; color: var(–text); }
+.forecast-reason { font-size: 13px; color: var(–muted); }
+.prob-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.prob-bar {
+height: 6px;
+border-radius: 3px;
+min-width: 60px;
+}
+.prob-label { font-family: var(–mono); font-size: 11px; color: var(–accent); white-space: nowrap; }
+
+/* ── CALENDAR ── */
+.cal-grid {
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+.cal-week {
+display: grid;
+grid-template-columns: 80px repeat(7, 1fr);
+gap: 4px;
+align-items: center;
+}
+.cal-week-label {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–muted);
+letter-spacing: .1em;
+text-transform: uppercase;
+}
+.cal-day {
+aspect-ratio: 1;
+border-radius: 6px;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+font-family: var(–mono);
+font-size: 11px;
+font-weight: 500;
+border: 1px solid var(–border);
+background: var(–surface2);
+cursor: default;
+transition: transform .15s;
+padding: 4px;
+min-height: 52px;
+position: relative;
+overflow: hidden;
+}
+.cal-day:hover { transform: scale(1.05); z-index: 2; }
+.cal-day-num { font-size: 13px; }
+.cal-day-label { font-size: 9px; letter-spacing: .05em; text-transform: uppercase; margin-top: 2px; opacity: .7; }
+.cal-empty { background: transparent; border-color: transparent; }
+.day-low { background: rgba(126,201,160,.07); border-color: rgba(126,201,160,.2); color: var(–green); }
+.day-med { background: rgba(200,169,110,.08); border-color: rgba(200,169,110,.25); color: var(–accent); }
+.day-high { background: rgba(201,126,126,.1); border-color: rgba(201,126,126,.3); color: var(–red); }
+.day-exam {
+background: rgba(201,126,126,.2);
+border-color: var(–red);
+color: #fff;
+font-weight: 700;
+box-shadow: 0 0 20px rgba(201,126,126,.3);
+}
+.day-exam::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,.03) 3px, rgba(255,255,255,.03) 6px);
+}
+.day-exam-gold { border-color: var(–accent); background: rgba(200,169,110,.2); box-shadow: 0 0 20px rgba(200,169,110,.3); }
+.day-exam-blue { border-color: var(–accent2); background: rgba(126,184,201,.2); box-shadow: 0 0 20px rgba(126,184,201,.3); }
+.cal-legend {
+display: flex;
+gap: 16px;
+flex-wrap: wrap;
+margin-bottom: 24px;
+font-family: var(–mono);
+font-size: 11px;
+}
+.leg-item { display: flex; align-items: center; gap: 6px; }
+.leg-swatch { width: 12px; height: 12px; border-radius: 3px; }
+.week-plan {
+margin-top: 12px;
+padding: 12px 16px;
+border-radius: 6px;
+background: var(–surface2);
+border: 1px solid var(–border);
+font-size: 13px;
+}
+.week-plan-title {
+font-family: var(–mono);
+font-size: 10px;
+letter-spacing: .15em;
+text-transform: uppercase;
+color: var(–accent);
+margin-bottom: 6px;
+}
+
+/* ── REPEATER TAG ── */
+.repeater-tag {
+display: inline-block;
+font-family: var(–mono);
+font-size: 9px;
+padding: 2px 7px;
+border-radius: 3px;
+margin-left: 8px;
+background: rgba(201,126,126,.15);
+color: var(–red);
+border: 1px solid rgba(201,126,126,.3);
+vertical-align: middle;
+letter-spacing: .1em;
+text-transform: uppercase;
+}
+.new-tag {
+background: rgba(126,201,160,.12);
+color: var(–green);
+border-color: rgba(126,201,160,.3);
+}
+
+/* ── TOPIC PILL ROW ── */
+.topic-row {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin: 12px 0;
+}
+.topic-pill {
+font-family: var(–mono);
+font-size: 11px;
+padding: 5px 12px;
+border-radius: 20px;
+border: 1px solid var(–border);
+background: var(–surface2);
+color: var(–muted);
+}
+.topic-pill.hot { border-color: rgba(201,126,126,.4); color: var(–red); background: rgba(201,126,126,.06); }
+.topic-pill.warm { border-color: rgba(200,169,110,.4); color: var(–accent); background: rgba(200,169,110,.06); }
+.topic-pill.cool { border-color: rgba(126,184,201,.4); color: var(–accent2); background: rgba(126,184,201,.06); }
+
+/* ── DIVIDER ── */
+.divider {
+border: none;
+border-top: 1px solid var(–border);
+margin: 32px 0;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: .4; }
+}
+
+/* ── INLINE MATH ── */
+.math {
+font-family: var(–mono);
+font-size: 13px;
+background: rgba(255,255,255,.05);
+padding: 1px 6px;
+border-radius: 3px;
+color: var(–accent2);
+}
+
+/* ── SCORE METER ── */
+.score-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; font-size: 13px; }
+.score-label { width: 160px; color: var(–muted); flex-shrink: 0; }
+.score-track { flex: 1; height: 4px; background: var(–border); border-radius: 2px; }
+.score-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+.score-val { font-family: var(–mono); font-size: 11px; color: var(–accent); width: 30px; text-align: right; }
+
+.info-block {
+background: rgba(126,184,201,.05);
+border: 1px solid rgba(126,184,201,.2);
+border-radius: 6px;
+padding: 14px 18px;
+margin: 14px 0;
+font-size: 13px;
+color: var(–accent2);
+font-family: var(–mono);
+line-height: 1.8;
+}
+.warn-block {
+background: rgba(201,126,126,.05);
+border: 1px solid rgba(201,126,126,.2);
+border-radius: 6px;
+padding: 14px 18px;
+margin: 14px 0;
+font-size: 13px;
+color: var(–red);
+line-height: 1.7;
+}
+
+p { margin-bottom: 10px; font-size: 14px; }
+h4 { color: var(–accent); font-family: var(–mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin: 20px 0 8px; }
+</style>
+
+</head>
+<body>
+
+<!-- HERO -->
+
+<header class="hero">
+  <p class="hero-eyebrow">Cambridge 9702 · AS Level Physics · 2026 Series</p>
+  <h1>A* Grade <em>Masterplan</em></h1>
+  <p class="hero-sub">// Senior Examiner Analysis · Syllabus Cross-Referenced · Trend-Driven Strategy</p>
+  <div class="exam-pills">
+    <span class="pill pill-p33"><span class="pill-dot"></span>P33 — 28 April · URGENT</span>
+    <span class="pill pill-p22"><span class="pill-dot"></span>P22 — 20 May · Theory</span>
+    <span class="pill pill-p12"><span class="pill-dot"></span>P12 — 3 June · MCQ</span>
+  </div>
+</header>
+
+<!-- NAV -->
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('p33')">P33 Practical</button>
+  <button class="tab-btn" onclick="showTab('p22')">P22 Theory</button>
+  <button class="tab-btn" onclick="showTab('p12')">P12 MCQ</button>
+  <button class="tab-btn" onclick="showTab('forecast')">2026 Forecast</button>
+  <button class="tab-btn" onclick="showTab('calendar')">Study Calendar</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     P33 PRACTICAL
+══════════════════════════════════════════════ -->
+
+<section id="p33" class="section active">
+  <div class="sec-header">
+    <span class="sec-num">01 —</span>
+    <h2 class="sec-title">Paper 33 · Perfect Practical</h2>
+    <span class="sec-badge badge-urgent">28 APR · FIRST EXAM</span>
+  </div>
+
+  <!-- MASTER CHECKLIST -->
+
+  <div class="card card-red">
+    <p class="card-title">Master Entry Checklist — Before You Begin</p>
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span><span class="check-label">Read the <strong>entire question</strong> before touching equipment. Identify the two variables and their relationship.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Write column headings with <strong>quantity / unit</strong> (e.g., <code>l / m</code> or <code>T² / s²</code>). Missing units = lost marks.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Decide <strong>significant figures</strong> before taking readings — rule: match the precision of the instrument.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Take a <strong>minimum of 6 sets</strong> of readings; the mark scheme requires 6 for data marks.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Spread your data <strong>over the full range</strong> of the independent variable. Clustered points lose graph marks.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Check for <strong>anomalous points</strong> — circle them on the graph, <em>do not</em> use them for best-fit line.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Use a <strong>sharp pencil</strong> for plotting — examiner marks to nearest half-square.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Draw the <strong>best-fit straight line</strong> with a ruler; it should have roughly equal points on both sides.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Gradient triangle: use <strong>at least half the drawn line</strong>, read co-ordinates from the line (not from data points).</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Quote gradient/intercept to <strong>2–3 significant figures</strong> with correct units.</span></li>
+    </ul>
+  </div>
+
+  <!-- QUESTION 1A: SIGNIFICANT FIGURES -->
+
+  <h4>Question 1 · Part A — Significant Figures in Tables</h4>
+  <div class="card card-gold">
+    <p class="card-title">The Cambridge S.F. Rules — Memorise These Exactly</p>
+    <div class="rule-box">
+      <div class="rule-title">Rule 1 — Raw Measurements</div>
+      Match the precision of the instrument.<br>
+      Ruler (mm) → record to nearest mm → <code>23.4 cm</code> ✓ &nbsp;|&nbsp; <code>23 cm</code> ✗<br>
+      Stopwatch (0.01 s) → record as <code>12.34 s</code> ✓
+    </div>
+    <div class="rule-box">
+      <div class="rule-title">Rule 2 — Calculated Columns</div>
+      Must be consistent with raw data. If raw data is 3 s.f., calculated column must be 3 s.f.<br>
+      Never quote <em>more</em> s.f. than the <em>least precise</em> measurement used.
+    </div>
+    <div class="rule-box">
+      <div class="rule-title">Rule 3 — Consistency Down a Column</div>
+      All values in a column must have the <strong>same number of decimal places</strong>.<br>
+      e.g. if first entry is <code>1.23</code>, entry cannot be <code>1.4</code> or <code>1.234</code>
+    </div>
+    <div class="rule-box">
+      <div class="rule-title">Rule 4 — Logarithm Columns</div>
+      If a column is <code>lg(d/m)</code>, the number of decimal places = s.f. of raw value.<br>
+      e.g. <code>d = 0.230 m</code> (3 s.f.) → <code>lg d = −0.638</code> (3 d.p.)
+    </div>
+  </div>
+
+  <!-- QUESTION 1B: HALF-SQUARE RULE -->
+
+  <h4>Question 1 · Part B — The "Half-Square" Plotting Rule</h4>
+  <div class="card card-blue">
+    <p class="card-title">Plotting Precision — This Costs Students Easy Marks</p>
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Half-square accuracy:</strong> Each plotted point must be within <code>±½</code> of a small grid square of its true position. On standard 2 mm graph paper, this means within <strong>±1 mm</strong>.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Plot size:</strong> Use a small cross or dot with a circle. Do NOT use large dots or blobs — these are ambiguous to the nearest mm.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Scale choice:</strong> Scales must allow the graph to occupy at least <strong>half the grid</strong> in both x and y directions. Avoid awkward scales like ×3 or ×7 — use ×1, ×2, ×4, ×5, ×10.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Scale origin:</strong> The origin does NOT need to be (0,0). A false origin is fine and often gives a better-spread graph.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Axis labels:</strong> Both axes must be labelled with quantity AND unit. <code>v² / m²s⁻²</code> not just <code>v²</code>.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Best-fit line:</strong> Must be a single, thin, continuous straight line. Do NOT join dots. The line is rejected if it bends at any point.</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label"><strong>Gradient read-off:</strong> Co-ordinates used must be <em>on the line</em>, read to the nearest half-square, and the triangle must span ≥ half the drawn line length.</span></li>
+    </ul>
+  </div>
+
+  <!-- QUESTION 2: LIMITATIONS TABLE -->
+
+  <h4>Question 2 · Evaluation — Standard Limitations & Mark-Scheme Improvements</h4>
+  <p>The examiner awards marks only for <em>specific, method-linked</em> improvements. Vague answers such as "use better equipment" or "be more careful" score zero. Below are the 6 standard categories with model answers.</p>
+
+  <div class="card card-purple" style="padding: 0; overflow: hidden;">
+    <table class="data-table" style="margin: 0;">
+      <thead>
+        <tr>
+          <th class="td-num">#</th>
+          <th>Limitation (Problem)</th>
+          <th>Mark-Scheme Improvement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-num">1</td>
+          <td class="td-limit"><strong>Parallax Error</strong><br><span style="color:var(--muted);font-size:12px;">Eye not level with scale / ruler not touching object.</span></td>
+          <td class="td-improve">Place ruler in contact with object and ensure eye is perpendicular to the scale. Use a set square to align the ruler vertically. For curved objects, use a travelling microscope.</td>
+        </tr>
+        <tr>
+          <td class="td-num">2</td>
+          <td class="td-limit"><strong>Reaction Time / Timing Error</strong><br><span style="color:var(--muted);font-size:12px;">Human error starting/stopping stopwatch.</span></td>
+          <td class="td-improve">Use a light gate connected to a data logger to measure time automatically, eliminating human reaction time. Alternatively, time over multiple oscillations (e.g., 10T) and divide to reduce percentage uncertainty.</td>
+        </tr>
+        <tr>
+          <td class="td-num">3</td>
+          <td class="td-limit"><strong>Friction / Resistance in Mechanism</strong><br><span style="color:var(--muted);font-size:12px;">Friction at pivot, pulley, or surface causing systematic error.</span></td>
+          <td class="td-improve">Use a frictionless pulley or air track. Lubricate pivot points. Ensure the surface is level by checking with a spirit level before each run.</td>
+        </tr>
+        <tr>
+          <td class="td-num">4</td>
+          <td class="td-limit"><strong>Oscillation / Reading Fluctuation</strong><br><span style="color:var(--muted);font-size:12px;">Meter/ammeter pointer oscillates; reading is unstable.</span></td>
+          <td class="td-improve">Take the mean of several readings (e.g., 5) and calculate the average. Wait for the reading to stabilise before recording. Use a digital meter to remove pointer ambiguity.</td>
+        </tr>
+        <tr>
+          <td class="td-num">5</td>
+          <td class="td-limit"><strong>Zero Error / Systematic Offset</strong><br><span style="color:var(--muted);font-size:12px;">Instrument does not read zero when it should.</span></td>
+          <td class="td-improve">Check the instrument reads zero before starting; apply a zero-correction to all readings. For a micrometer, record the zero error and subtract algebraically from all measurements.</td>
+        </tr>
+        <tr>
+          <td class="td-num">6</td>
+          <td class="td-limit"><strong>Heat / Temperature Variation</strong><br><span style="color:var(--muted);font-size:12px;">Resistance of wire changes with temperature during current flow.</span></td>
+          <td class="td-improve">Use short current pulses (switch off between readings) to prevent heating of the wire. Alternatively, use a thermometer to monitor temperature and only record when it returns to room temperature.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warn-block">
+    ⚠ EXAMINER NOTE: Every improvement must name (a) what specific piece of equipment is used, and (b) specifically how it reduces the limitation. Generic answers are awarded 0 marks in the 9702 practical mark scheme.
+  </div>
+
+  <!-- Q2 EXTRA: UNCERTAINTY -->
+
+  <h4>Question 2 · Uncertainty Calculations — Quick Protocol</h4>
+  <div class="card card-green">
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span><span class="check-label">Absolute uncertainty of repeated readings = <code>½ × (max − min)</code></span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Percentage uncertainty = <code>(absolute uncertainty ÷ mean) × 100%</code></span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">When <strong>adding/subtracting</strong>: add absolute uncertainties</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">When <strong>multiplying/dividing</strong>: add percentage uncertainties</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">When raising to a <strong>power n</strong>: multiply % uncertainty by n &nbsp;(e.g., T² → ×2)</span></li>
+      <li><span class="check-icon">✓</span><span class="check-label">Maximum/minimum gradient method: draw worst-fit line through error bars to find gradient uncertainty</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     P22 THEORY
+══════════════════════════════════════════════ -->
+
+<section id="p22" class="section">
+  <div class="sec-header">
+    <span class="sec-num">02 —</span>
+    <h2 class="sec-title">Paper 22 · Trend Analysis</h2>
+    <span class="sec-badge badge-theory">20 MAY</span>
+  </div>
+
+  <!-- REPEATERS -->
+
+  <h4>Repeater Topics — Appeared in Both Feb/Mar AND May/Jun 2025</h4>
+  <p>Cross-referencing the 2025 P22 series, these topics appeared in <em>both</em> sittings — they are almost certain to reappear in some form in 2026.</p>
+
+  <div class="card card-red">
+    <p class="card-title">🔁 High-Confidence Repeaters</p>
+    <div class="forecast-item">
+      <span class="forecast-topic">Kinematics — s/v/a graphs <span class="repeater-tag">REPEATER</span></span>
+      <span class="forecast-reason">Displacement-time and v-t graphs with area/gradient interpretation. Both sittings included multi-stage motion questions with numerical calculation.</span>
+      <div class="prob-bar-wrap"><div class="prob-bar" style="width:90px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">VERY HIGH</span></div>
+    </div>
+    <div class="forecast-item">
+      <span class="forecast-topic">Electrical Circuits — internal resistance <span class="repeater-tag">REPEATER</span></span>
+      <span class="forecast-reason">EMF, terminal p.d., lost volts and V = E − Ir. Feb/Mar tested graphically; May/Jun tested numerically. Both sittings required full derivation.</span>
+      <div class="prob-bar-wrap"><div class="prob-bar" style="width:85px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">VERY HIGH</span></div>
+    </div>
+    <div class="forecast-item">
+      <span class="forecast-topic">Waves — stationary wave formation <span class="repeater-tag">REPEATER</span></span>
+      <span class="forecast-reason">Nodes, antinodes, phase relationships, and the condition for stationary wave formation appeared in both sittings with diagram-labelling and explanation tasks.</span>
+      <div class="prob-bar-wrap"><div class="prob-bar" style="width:80px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">HIGH</span></div>
+    </div>
+    <div class="forecast-item">
+      <span class="forecast-topic">Forces — Newton's Laws + momentum <span class="repeater-tag">REPEATER</span></span>
+      <span class="forecast-reason">Both sittings featured impulse = change in momentum with collision/explosion scenarios requiring elastic vs inelastic identification.</span>
+      <div class="prob-bar-wrap"><div class="prob-bar" style="width:78px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">HIGH</span></div>
+    </div>
+    <div class="forecast-item">
+      <span class="forecast-topic">Matter — stress/strain, Young modulus <span class="repeater-tag">REPEATER</span></span>
+      <span class="forecast-reason">Stress-strain graph interpretation with elastic limit, UTS, and Young modulus calculation featured in both sittings in different contexts.</span>
+      <div class="prob-bar-wrap"><div class="prob-bar" style="width:72px;background:linear-gradient(90deg,var(--accent),rgba(200,169,110,.3));"></div><span class="prob-label">HIGH</span></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EXPLAIN QUESTIONS -->
+
+  <h4>The "Explain" Question — Bad vs. A* Answers</h4>
+  <p>Cambridge awards marks for <em>precise physical reasoning</em> using correct terminology. The examples below show exactly what separates a grade C response from an A* response.</p>
+
+  <!-- Example 1 -->
+
+  <div class="card card-blue" style="margin-bottom: 8px;">
+    <p class="card-title">Example 1 · Superposition · "Explain how a stationary wave is formed" [3 marks]</p>
+  </div>
+  <div class="compare-grid" style="margin-bottom: 24px;">
+    <div class="compare-bad">
+      <p class="compare-label">✗ Bad Answer — Grade C</p>
+      <p class="compare-text">A stationary wave forms when two waves meet. The waves combine and some places have big amplitude and some have zero amplitude. This is because of interference between the waves.</p>
+    </div>
+    <div class="compare-good">
+      <p class="compare-label">✓ A* Answer — Full Marks</p>
+      <p class="compare-text">Two waves of <mark>equal frequency and amplitude</mark> travel in <mark>opposite directions</mark> and <mark>superpose</mark>. At points where they meet <mark>in phase</mark>, <mark>constructive superposition</mark> produces antinodes with maximum amplitude 2A. At points of <mark>phase difference π rad</mark>, <mark>destructive superposition</mark> produces nodes with zero amplitude. <mark>No energy is transferred</mark> along the direction of propagation.</p>
+    </div>
+  </div>
+
+  <!-- Example 2 -->
+
+  <div class="card card-blue" style="margin-bottom: 8px;">
+    <p class="card-title">Example 2 · Superposition · "Explain why dark fringes appear in Young's double-slit" [3 marks]</p>
+  </div>
+  <div class="compare-grid" style="margin-bottom: 24px;">
+    <div class="compare-bad">
+      <p class="compare-label">✗ Bad Answer — Grade C</p>
+      <p class="compare-text">Dark fringes form because destructive interference happens. The waves cancel each other out so there is no light.</p>
+    </div>
+    <div class="compare-good">
+      <p class="compare-label">✓ A* Answer — Full Marks</p>
+      <p class="compare-text">The two slits act as <mark>coherent sources</mark> (same frequency, constant phase difference). At dark fringe positions, the <mark>path difference</mark> from the two slits equals <mark>(n + ½)λ</mark>, where n = 0, 1, 2…. This means the waves arrive with a <mark>phase difference of π rad (antiphase)</mark>, causing <mark>destructive superposition</mark>. The amplitudes cancel, giving <mark>zero resultant amplitude</mark> and hence zero intensity.</p>
+    </div>
+  </div>
+
+  <!-- Example 3 -->
+
+  <div class="card card-gold" style="margin-bottom: 8px;">
+    <p class="card-title">Example 3 · Electricity · "Explain what is meant by the e.m.f. of a battery" [2 marks] + "Explain why terminal p.d. is less than e.m.f." [2 marks]</p>
+  </div>
+  <div class="compare-grid" style="margin-bottom: 24px;">
+    <div class="compare-bad">
+      <p class="compare-label">✗ Bad Answer — Grade C</p>
+      <p class="compare-text">EMF is the voltage of a battery. Terminal p.d. is less because some voltage is lost inside the battery due to its resistance.</p>
+    </div>
+    <div class="compare-good">
+      <p class="compare-label">✓ A* Answer — Full Marks</p>
+      <p class="compare-text"><mark>E.m.f. is the energy converted from chemical (non-electrical) to electrical per unit charge</mark> passing through the source: E = W/Q. The terminal p.d. is less than the e.m.f. because the current I flows through the battery's <mark>internal resistance r</mark>, causing a <mark>potential drop Ir</mark> within the battery itself. Therefore: <mark>V<sub>terminal</sub> = E − Ir</mark>. This "lost voltage" appears as thermal energy in the battery.</p>
+    </div>
+  </div>
+
+  <!-- KEY TERMINOLOGY TABLE -->
+
+  <h4>Mandatory Terminology — Must Appear in "Explain" Answers</h4>
+  <div class="card card-gold" style="padding: 0; overflow: hidden;">
+    <table class="data-table" style="margin: 0;">
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th>Terms You MUST Use</th>
+          <th>Terms That Lose Marks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Superposition</strong></td>
+          <td style="color:var(--green);">superpose, path difference, phase difference, constructive/destructive, coherent, amplitude</td>
+          <td style="color:var(--red);">"waves add", "cancel", "meet", "combine"</td>
+        </tr>
+        <tr>
+          <td><strong>Stationary waves</strong></td>
+          <td style="color:var(--green);">node, antinode, equal frequency & amplitude, opposite directions, no energy transfer</td>
+          <td style="color:var(--red);">"standing wave" (acceptable), "the wave stops", "doesn't move"</td>
+        </tr>
+        <tr>
+          <td><strong>EMF/circuits</strong></td>
+          <td style="color:var(--green);">energy per unit charge, non-electrical to electrical, internal resistance, lost volts = Ir</td>
+          <td style="color:var(--red);">"voltage of battery", "force of electricity"</td>
+        </tr>
+        <tr>
+          <td><strong>Drift velocity</strong></td>
+          <td style="color:var(--green);">I = Anvq, number density n, cross-sectional area A, charge q</td>
+          <td style="color:var(--red);">"electrons speed up", "more electrons"</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TOPIC HEAT MAP -->
+
+  <h4>2025 P22 Topic Frequency Map</h4>
+  <div class="score-row"><span class="score-label">Kinematics / Dynamics</span><div class="score-track"><div class="score-fill" style="width:88%;background:var(--red);"></div></div><span class="score-val">88%</span></div>
+  <div class="score-row"><span class="score-label">Electricity & Circuits</span><div class="score-track"><div class="score-fill" style="width:85%;background:var(--red);"></div></div><span class="score-val">85%</span></div>
+  <div class="score-row"><span class="score-label">Waves & Superposition</span><div class="score-track"><div class="score-fill" style="width:82%;background:var(--accent);"></div></div><span class="score-val">82%</span></div>
+  <div class="score-row"><span class="score-label">Forces & Moments</span><div class="score-track"><div class="score-fill" style="width:75%;background:var(--accent);"></div></div><span class="score-val">75%</span></div>
+  <div class="score-row"><span class="score-label">Matter / Young Modulus</span><div class="score-track"><div class="score-fill" style="width:70%;background:var(--accent);"></div></div><span class="score-val">70%</span></div>
+  <div class="score-row"><span class="score-label">Particle Physics</span><div class="score-track"><div class="score-fill" style="width:45%;background:var(--accent2);"></div></div><span class="score-val">45%</span></div>
+  <div class="score-row"><span class="score-label">Measurement & Errors</span><div class="score-track"><div class="score-fill" style="width:40%;background:var(--accent2);"></div></div><span class="score-val">40%</span></div>
+  <div class="score-row"><span class="score-label">Polarisation</span><div class="score-track"><div class="score-fill" style="width:28%;background:var(--green);"></div></div><span class="score-val">28%</span></div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     P12 MCQ
+══════════════════════════════════════════════ -->
+
+<section id="p12" class="section">
+  <div class="sec-header">
+    <span class="sec-num">03 —</span>
+    <h2 class="sec-title">Paper 12 · MCQ Traps</h2>
+    <span class="sec-badge badge-mcq">3 JUN</span>
+  </div>
+
+  <p>P12 contains 40 questions in 75 minutes — that's <strong>1 min 52 sec per question</strong>. Speed comes from pattern recognition. Below are the most frequently exploited traps in the 9702 MCQ paper.</p>
+
+  <!-- TRAP GRID -->
+
+  <div class="trap-grid">
+
+```
+<div class="trap-card">
+  <p class="trap-title">TRAP 1 — nm & μm Conversion</p>
+  <p class="trap-body">
+    Wavelength questions give λ in nm; formulas need m.<br>
+    <strong>1 nm = 10⁻⁹ m</strong> &nbsp;|&nbsp; <strong>1 μm = 10⁻⁶ m</strong><br>
+    Trap: <code>λ = 600 nm</code> entered as <code>600</code> instead of <code>6×10⁻⁷</code>.
+    Always convert before substituting. Young's fringes: <code>w = λD/a</code> — if D in m, a in mm, you must convert a too.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 2 — MeV to Joules</p>
+  <p class="trap-body">
+    Nuclear/particle questions give energies in MeV.<br>
+    <strong>1 eV = 1.6×10⁻¹⁹ J</strong><br>
+    <strong>1 MeV = 1.6×10⁻¹³ J</strong><br>
+    Trap: forgetting the Mega (×10⁶) prefix. Write it as: <code>E(J) = E(MeV) × 1.6×10⁻¹³</code>
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 3 — Vector Components</p>
+  <p class="trap-body">
+    Always sketch the triangle. For a force F at angle θ to horizontal:<br>
+    <code>F_x = F cos θ</code> &nbsp;|&nbsp; <code>F_y = F sin θ</code><br>
+    Trap: swapping sin/cos when θ is measured from vertical. If θ is from <em>vertical</em>, flip: <code>F_x = F sin θ</code>. Draw it every time.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 4 — mm² to m²</p>
+  <p class="trap-body">
+    Cross-sectional area A is often given in mm².<br>
+    <strong>1 mm² = 10⁻⁶ m²</strong> (NOT 10⁻³!)<br>
+    Trap: <code>2.5 mm² → 2.5×10⁻³ m²</code> is <em>wrong</em>.<br>
+    Correct: <code>2.5 mm² = 2.5×10⁻⁶ m²</code><br>
+    The Learner Guide explicitly flags this as the most common arithmetic error in 9702.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 5 — Scalar vs Vector Signs</p>
+  <p class="trap-body">
+    Speed, distance, energy: always positive.<br>
+    Velocity, displacement, momentum: can be negative.<br>
+    Trap: taking KE as <code>½mv²</code> with a signed v — KE is always ≥ 0 so the sign of v doesn't matter for KE but <em>does</em> matter for momentum <code>p = mv</code>.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 6 — Resistance in Parallel</p>
+  <p class="trap-body">
+    For two resistors in parallel:<br>
+    <code>R = R₁R₂ / (R₁+R₂)</code><br>
+    Trap: adding reciprocals but forgetting to take the final reciprocal.<br>
+    Also: adding a resistor in <em>parallel</em> always <em>decreases</em> total resistance, even if the added resistor is large.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 7 — g = 9.81 vs 10</p>
+  <p class="trap-body">
+    MCQ distractors are designed around g = 10 answers. The data sheet gives <code>g = 9.81 m s⁻²</code>. Always use 9.81 unless explicitly told otherwise. The "nice" answer is the trap.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 8 — Period vs Frequency</p>
+  <p class="trap-body">
+    <code>T = 1/f</code> &nbsp;—&nbsp; if a wave has f = 400 Hz, T = 0.0025 s (not 400 s).<br>
+    Trap: in wave-speed questions, <code>v = fλ</code>, not <code>v = λ/T</code> recalculated wrong. Stick to <code>v = fλ</code> directly.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 9 — Significant Figures in MCQ</p>
+  <p class="trap-body">
+    MCQ answers are given to 2–3 s.f. If your calculation gives 4.9999, the answer is 5.0 (option C), not 4.9 (option B). Always round at the end, not mid-calculation. Keep full precision on calculator throughout.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 10 — Phase Difference (rad vs degrees)</p>
+  <p class="trap-body">
+    9702 uses radians. "Antiphase" = π rad = 180°. "In phase" = 2π rad (or 0).<br>
+    Trap: mixing degrees into a radian formula.<br>
+    Path difference of λ/2 → phase difference = <code>π rad</code> ✓, not 90°.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 11 — kWh to Joules</p>
+  <p class="trap-body">
+    Energy questions: <strong>1 kWh = 3.6×10⁶ J</strong><br>
+    Derivation: 1 kW × 3600 s = 3.6×10⁶ J.<br>
+    Trap: forgetting ×3600 and just using 1000.
+  </p>
+</div>
+
+<div class="trap-card">
+  <p class="trap-title">TRAP 12 — Elastic vs Inelastic</p>
+  <p class="trap-body">
+    In an <strong>elastic</strong> collision: KE <em>and</em> momentum are both conserved.<br>
+    In an <strong>inelastic</strong> collision: only momentum is conserved. KE is not.<br>
+    Trap: "perfectly inelastic" = objects stick together (maximum KE loss). This is not the same as just "inelastic".
+  </p>
+</div>
+```
+
+  </div>
+
+  <!-- MCQ STRATEGY BOX -->
+
+  <div class="info-block" style="margin-top: 28px;">
+    ⏱ TIME STRATEGY: Q1–10 → aim for 15 mins. Q11–25 → 28 mins. Q26–40 → 22 mins. Reserve 10 min for review. Flag and skip any question taking >2.5 min. Never leave a blank — there is no negative marking in P12.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     2026 FORECAST
+══════════════════════════════════════════════ -->
+
+<section id="forecast" class="section">
+  <div class="sec-header">
+    <span class="sec-num">04 —</span>
+    <h2 class="sec-title">2026 Forecast</h2>
+    <span class="sec-badge badge-theory">PREDICTIVE ANALYSIS</span>
+  </div>
+
+  <p>Cambridge examiners rotate topic emphasis across series. Topics that were <em>lightly tested or absent</em> in 2025 are statistically more likely to receive heavier examination in May/June 2026. Based on 9702 syllabus coverage patterns and cross-series analysis:</p>
+
+  <div class="card card-gold">
+    <p class="card-title">🔮 Under-Tested in 2025 → High Probability for 2026</p>
+
+```
+<div class="forecast-item">
+  <span class="forecast-topic">Polarisation <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">Appeared as a minor sub-part in 2025 but was not given a dedicated 4–5 mark question. Expect an "explain how a polarising filter works" or Malus's Law application with I = I₀cos²θ in P22.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:88px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">VERY HIGH</span></div>
+</div>
+
+<div class="forecast-item">
+  <span class="forecast-topic">Kirchhoff's Laws (explicit) <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">KCL/KVL appeared embedded in circuit problems but was not explicitly stated as a law in 2025. A question asking you to "apply Kirchhoff's second law to the loop" with loop notation is overdue.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:84px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">HIGH</span></div>
+</div>
+
+<div class="forecast-item">
+  <span class="forecast-topic">Particle Physics — quarks & β decay <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">Quark composition of hadrons and the quark-level description of β⁺ and β⁻ decay was absent from 2025 P22 structured questions. This is a classic 3-mark "describe" question waiting to appear.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:82px;background:linear-gradient(90deg,var(--red),rgba(201,126,126,.3));"></div><span class="prob-label">HIGH</span></div>
+</div>
+
+<div class="forecast-item">
+  <span class="forecast-topic">Work-Energy Theorem (non-horizontal) <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">Most 2025 energy questions used horizontal surfaces. An inclined plane with friction — requiring W = Fd cosθ and GPE + KE + heat analysis — has not featured as a full question recently.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:75px;background:linear-gradient(90deg,var(--accent),rgba(200,169,110,.3));"></div><span class="prob-label">MEDIUM-HIGH</span></div>
+</div>
+
+<div class="forecast-item">
+  <span class="forecast-topic">Diffraction Grating (P22 structured) <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">The grating equation d sinθ = nλ appeared only in P12 MCQ in 2025. A full P22 structured question asking for derivation of slit separation d from measured angles is plausible.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:70px;background:linear-gradient(90deg,var(--accent),rgba(200,169,110,.3));"></div><span class="prob-label">MEDIUM</span></div>
+</div>
+
+<div class="forecast-item">
+  <span class="forecast-topic">Density & Upthrust / Archimedes <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">ρ = m/V and upthrust = ρVg questions involving objects floating or submerged were absent from 2025 structured papers. This is a simple but frequently neglected topic.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:65px;background:linear-gradient(90deg,var(--accent2),rgba(126,184,201,.3));"></div><span class="prob-label">MEDIUM</span></div>
+</div>
+
+<div class="forecast-item">
+  <span class="forecast-topic">Torque & Couples <span class="new-tag">UNDER-TESTED</span></span>
+  <span class="forecast-reason">Couple = Fd with conditions (equal, opposite, non-collinear) and the principle of moments for extended bodies was only briefly tested in 2025. A full structured question is plausible.</span>
+  <div class="prob-bar-wrap"><div class="prob-bar" style="width:60px;background:linear-gradient(90deg,var(--accent2),rgba(126,184,201,.3));"></div><span class="prob-label">MEDIUM</span></div>
+</div>
+```
+
+  </div>
+
+  <h4>Your Top-5 Revision Priorities Based on Forecast</h4>
+  <div class="topic-row">
+    <span class="topic-pill hot">Polarisation + Malus's Law</span>
+    <span class="topic-pill hot">Kirchhoff's Laws</span>
+    <span class="topic-pill hot">Quark Model + β decay</span>
+    <span class="topic-pill warm">Diffraction Grating</span>
+    <span class="topic-pill warm">Work on inclined planes</span>
+    <span class="topic-pill cool">Upthrust / Archimedes</span>
+    <span class="topic-pill cool">Couples & Torque</span>
+  </div>
+
+  <div class="warn-block">
+    ⚠ EXAMINER CAVEAT: Forecasting is probabilistic, not certain. Cambridge occasionally re-tests popular topics with higher difficulty. Do not neglect the Repeater topics from P22 analysis — they will form the backbone of the paper regardless.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     CALENDAR
+══════════════════════════════════════════════ -->
+
+<section id="calendar" class="section">
+  <div class="sec-header">
+    <span class="sec-num">05 —</span>
+    <h2 class="sec-title">Study Calendar</h2>
+    <span class="sec-badge badge-mcq">26 APR → 3 JUN</span>
+  </div>
+
+  <div class="cal-legend">
+    <div class="leg-item"><div class="leg-swatch" style="background:rgba(126,201,160,.4);border:1px solid var(--green);"></div>Light review</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:rgba(200,169,110,.4);border:1px solid var(--accent);"></div>Medium study</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:rgba(201,126,126,.35);border:1px solid var(--red);"></div>High intensity</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:rgba(201,126,126,.6);border:1px solid var(--red);box-shadow:0 0 8px var(--red);"></div>EXAM DAY</div>
+  </div>
+
+  <!-- WEEK HEADERS -->
+
+  <div class="cal-grid">
+    <div class="cal-week" style="margin-bottom:4px;">
+      <div></div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">MON</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">TUE</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">WED</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">THU</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">FRI</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">SAT</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">SUN</div>
+    </div>
+
+```
+<!-- WEEK 1: Apr 28 exam week (Apr 26 = Sun, so wk starts Apr 28) -->
+<div class="cal-week">
+  <div class="cal-week-label">APR 28</div>
+  <div class="cal-day day-exam"><span class="cal-day-num">28</span><span class="cal-day-label">P33 EXAM</span></div>
+  <div class="cal-day day-low"><span class="cal-day-num">29</span><span class="cal-day-label">Rest</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">30</span><span class="cal-day-label">P22 Rev</span></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+</div>
+
+<!-- MAY weeks -->
+<div class="cal-week">
+  <div class="cal-week-label">MAY 1</div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-med"><span class="cal-day-num">1</span><span class="cal-day-label">Waves</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">2</span><span class="cal-day-label">Electric</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">3</span><span class="cal-day-label">P22 Mock</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">4</span><span class="cal-day-label">Review</span></div>
+  <div class="cal-day day-low"><span class="cal-day-num">5</span><span class="cal-day-label">Rest</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">6</span><span class="cal-day-label">Mechanics</span></div>
+</div>
+
+<div class="cal-week">
+  <div class="cal-week-label">MAY 7</div>
+  <div class="cal-day day-high"><span class="cal-day-num">7</span><span class="cal-day-label">P22 Past</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">8</span><span class="cal-day-label">Explain Qs</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">9</span><span class="cal-day-label">Particles</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">10</span><span class="cal-day-label">P22 Mock</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">11</span><span class="cal-day-label">Review</span></div>
+  <div class="cal-day day-low"><span class="cal-day-num">12</span><span class="cal-day-label">Rest</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">13</span><span class="cal-day-label">Forecast</span></div>
+</div>
+
+<div class="cal-week">
+  <div class="cal-week-label">MAY 14</div>
+  <div class="cal-day day-high"><span class="cal-day-num">14</span><span class="cal-day-label">Full Mock</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">15</span><span class="cal-day-label">Weak Spots</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">16</span><span class="cal-day-label">Definitions</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">17</span><span class="cal-day-label">P22 Past</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">18</span><span class="cal-day-label">Light Rev</span></div>
+  <div class="cal-day day-low"><span class="cal-day-num">19</span><span class="cal-day-label">Final Rev</span></div>
+  <div class="cal-day day-exam day-exam-gold"><span class="cal-day-num">20</span><span class="cal-day-label">P22 EXAM</span></div>
+</div>
+
+<div class="cal-week">
+  <div class="cal-week-label">MAY 21</div>
+  <div class="cal-day day-low"><span class="cal-day-num">21</span><span class="cal-day-label">P22 Done!</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">22</span><span class="cal-day-label">MCQ Traps</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">23</span><span class="cal-day-label">P12 Mock</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">24</span><span class="cal-day-label">Review Errs</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">25</span><span class="cal-day-label">Units/Conv</span></div>
+  <div class="cal-day day-low"><span class="cal-day-num">26</span><span class="cal-day-label">Rest</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">27</span><span class="cal-day-label">Vectors</span></div>
+</div>
+
+<div class="cal-week">
+  <div class="cal-week-label">MAY 28</div>
+  <div class="cal-day day-high"><span class="cal-day-num">28</span><span class="cal-day-label">Full Mock</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">29</span><span class="cal-day-label">Review All</span></div>
+  <div class="cal-day day-high"><span class="cal-day-num">30</span><span class="cal-day-label">P12 Timed</span></div>
+  <div class="cal-day day-med"><span class="cal-day-num">31</span><span class="cal-day-label">Consolidate</span></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+</div>
+
+<!-- JUNE -->
+<div class="cal-week">
+  <div class="cal-week-label">JUNE 1</div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-low"><span class="cal-day-num">1</span><span class="cal-day-label">Formulas</span></div>
+  <div class="cal-day day-low"><span class="cal-day-num">2</span><span class="cal-day-label">Final Rev</span></div>
+  <div class="cal-day day-exam day-exam-blue"><span class="cal-day-num">3</span><span class="cal-day-label">P12 EXAM</span></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+  <div class="cal-day day-empty"></div>
+</div>
+```
+
+  </div>
+
+  <!-- PHASE PLANS -->
+
+  <h4 style="margin-top: 36px;">Phase-by-Phase Daily Plan</h4>
+
+  <div class="week-plan">
+    <div class="week-plan-title">PHASE 1 — Apr 26–27 · Last 48 Hours Before P33</div>
+    <strong style="color:var(--red);">PRACTICAL BLITZ ONLY.</strong> Review all 6 limitation-improvement pairs. Practice plotting 2 full graphs on real 2mm paper. Do NOT start new theory — consolidate only. Sleep 8 hrs the night before.
+  </div>
+
+  <div class="week-plan" style="margin-top: 10px;">
+    <div class="week-plan-title">PHASE 2 — Apr 29 – May 19 · P22 Theory Window (21 days)</div>
+    <strong style="color:var(--accent);">3 hrs/day weekdays · 4 hrs/day weekends.</strong><br>
+    Week 1 (Apr 29–May 6): Waves (superposition, diffraction, stationary waves) + Particle Physics.<br>
+    Week 2 (May 7–13): Electricity (KCL/KVL, internal resistance, drift velocity) + Mechanics.<br>
+    Week 3 (May 14–19): Full P22 timed mocks daily. Prioritise "Explain" questions. Review weak terminology daily. Final day (May 19): light revision + early sleep.
+  </div>
+
+  <div class="week-plan" style="margin-top: 10px;">
+    <div class="week-plan-title">PHASE 3 — May 21 – Jun 2 · P12 MCQ Window (13 days)</div>
+    <strong style="color:var(--accent2);">2.5 hrs/day · MCQ-focused.</strong><br>
+    Days 1–4: Go through all 12 MCQ traps. Practice each trap type with 5 targeted questions.<br>
+    Days 5–9: Full timed 40-question P12 mocks (75 mins). Analyse every wrong answer.<br>
+    Days 10–11: Final formula sheet review. Unit conversion drills. Vector component practice.<br>
+    Day 12 (Jun 2): Light review only. Eat well. Sleep early.<br>
+    Day 13 (Jun 3): <strong style="color:var(--accent2);">P12 EXAM.</strong>
+  </div>
+
+  <div class="info-block" style="margin-top: 20px;">
+    📌 DAILY NON-NEGOTIABLES: (1) Write out definitions for 3 key terms from memory. (2) Solve at least 1 "Explain" question in full. (3) Review yesterday's errors before starting new material. These 3 habits compound massively over 38 days.
+  </div>
+</section>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
