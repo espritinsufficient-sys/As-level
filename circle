@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circle from 3 Points</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Playfair+Display:wght@700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0f;
+    color: #e8e4d9;
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    color: #f0c94a;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+    color: #666;
+    margin-bottom: 20px;
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 960px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  canvas {
+    background: #0f0f1a;
+    border: 1px solid #222;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .panel {
+    flex: 1;
+    min-width: 260px;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .step-card {
+    background: #0f0f1a;
+    border: 1px solid #1e1e2e;
+    border-left: 3px solid #333;
+    border-radius: 4px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.45;
+  }
+
+  .step-card:hover { opacity: 0.75; border-left-color: #555; }
+
+  .step-card.active {
+    opacity: 1;
+    border-left-color: var(--accent);
+    background: #13131f;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .step-body {
+    font-size: 0.68rem;
+    color: #aaa;
+    line-height: 1.6;
+  }
+
+  .math {
+    display: inline-block;
+    background: #1a1a2e;
+    color: #f0c94a;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.66rem;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    flex: 1;
+    padding: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  #btnPrev { background: #1e1e2e; color: #888; }
+  #btnPrev:hover { background: #2a2a3e; color: #ccc; }
+  #btnNext { background: #f0c94a; color: #000; }
+  #btnNext:hover { background: #ffd966; }
+  #btnReset { background: #1e1e2e; color: #666; font-size: 0.6rem; flex: 0 0 auto; padding: 10px 14px; }
+  #btnReset:hover { color: #999; }
+
+  .coords-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .coord-input {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .coord-input label {
+    display: block;
+    font-size: 0.6rem;
+    color: #555;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .coord-input input {
+    width: 100%;
+    background: #0f0f1a;
+    border: 1px solid #222;
+    border-radius: 3px;
+    color: #e8e4d9;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 6px 8px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .coord-input input:focus { border-color: #f0c94a; }
+
+  .result-box {
+    background: #0d1117;
+    border: 1px solid #1e3a1e;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 0.68rem;
+    color: #6abf6a;
+    line-height: 1.8;
+    display: none;
+  }
+
+  .result-box.visible { display: block; }
+  .result-box .label { color: #444; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Circle Through 3 Points</h1>
+<p class="subtitle">Perpendicular Bisector Method — Step by Step</p>
+
+<div class="layout">
+  <canvas id="c" width="440" height="440"></canvas>
+
+  <div class="panel">
+    <div class="coords-row">
+      <div class="coord-input"><label>A (x,y)</label><input id="ax" value="1" type="number"><input id="ay" value="0" type="number" style="margin-top:4px"></div>
+      <div class="coord-input"><label>B (x,y)</label><input id="bx" value="0" type="number"><input id="by" value="2" type="number" style="margin-top:4px"></div>
+      <div class="coord-input"><label>C (x,y)</label><input id="cx" value="3" type="number"><input id="cy" value="1" type="number" style="margin-top:4px"></div>
+    </div>
+
+    <div class="controls">
+      <button id="btnPrev">← Prev</button>
+      <button id="btnNext">Next →</button>
+      <button id="btnReset">↺</button>
+    </div>
+
+    <div id="s0" class="step-card active" style="--accent:#f0c94a" onclick="goTo(0)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Plot the 3 Points</div></div>
+      <div class="step-body">Place points <span class="math">A</span>, <span class="math">B</span>, <span class="math">C</span> on the plane. These lie on the circumference of our unknown circle.</div>
+    </div>
+
+    <div id="s1" class="step-card" style="--accent:#4af0a0" onclick="goTo(1)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Midpoint of AB</div></div>
+      <div class="step-body">Find the midpoint of chord AB. The perpendicular bisector of any chord always passes through the <em>centre</em> of the circle.</div>
+    </div>
+
+    <div id="s2" class="step-card" style="--accent:#4ab4f0" onclick="goTo(2)">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Bisector of AB</div></div>
+      <div class="step-body">Draw the perpendicular bisector of AB. Its slope is the <em>negative reciprocal</em> of AB's slope: <span class="math">m⊥ = -1/m</span></div>
+    </div>
+
+    <div id="s3" class="step-card" style="--accent:#f04a9a" onclick="goTo(3)">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Bisector of BC</div></div>
+      <div class="step-body">Repeat for chord BC. We now have two bisector lines — they must intersect at the circle's centre.</div>
+    </div>
+
+    <div id="s4" class="step-card" style="--accent:#a04af0" onclick="goTo(4)">
+      <div class="step-header"><div class="step-num">5</div><div class="step-title">Find the Centre</div></div>
+      <div class="step-body">Solve the two bisector equations simultaneously. Their intersection point is the <em>centre</em> of the circle.</div>
+    </div>
+
+    <div id="s5" class="step-card" style="--accent:#f07a4a" onclick="goTo(5)">
+      <div class="step-header"><div class="step-num">6</div><div class="step-title">Draw the Circle</div></div>
+      <div class="step-body">The radius = distance from centre to any of the 3 points. Then write: <span class="math">(x−h)²+(y−k)²=r²</span></div>
+    </div>
+
+    <div id="resultBox" class="result-box">
+      <div class="label">Final Equation</div>
+      <div id="resultText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+let step = 0;
+
+function getPoints() {
+  return {
+    A: [parseFloat(document.getElementById('ax').value)||0, parseFloat(document.getElementById('ay').value)||0],
+    B: [parseFloat(document.getElementById('bx').value)||0, parseFloat(document.getElementById('by').value)||0],
+    C: [parseFloat(document.getElementById('cx').value)||0, parseFloat(document.getElementById('cy').value)||0],
+  };
+}
+
+function computeAll(pts) {
+  const {A,B,C} = pts;
+  const midAB = [(A[0]+B[0])/2, (A[1]+B[1])/2];
+  const midBC = [(B[0]+C[0])/2, (B[1]+C[1])/2];
+  const slopeAB = (B[1]-A[1]) === 0 ? Infinity : (B[1]-A[1])/(B[0]-A[0]);
+  const slopeBC = (C[1]-B[1]) === 0 ? Infinity : (C[1]-B[1])/(C[0]-B[0]);
+  const perpAB = slopeAB === 0 ? Infinity : (slopeAB === Infinity ? 0 : -1/slopeAB);
+  const perpBC = slopeBC === 0 ? Infinity : (slopeBC === Infinity ? 0 : -1/slopeBC);
+
+  // Solve for intersection of two lines
+  // Line1: y - midAB[1] = perpAB*(x - midAB[0])
+  // Line2: y - midBC[1] = perpBC*(x - midBC[0])
+  let cx, cy;
+  if (perpAB === Infinity && perpBC === Infinity) { cx = midAB[0]; cy = midBC[1]; }
+  else if (perpAB === Infinity) { cx = midAB[0]; cy = midBC[1] + perpBC*(cx - midBC[0]); }
+  else if (perpBC === Infinity) { cx = midBC[0]; cy = midAB[1] + perpAB*(cx - midAB[0]); }
+  else {
+    cx = (midBC[1] - midAB[1] + perpAB*midAB[0] - perpBC*midBC[0]) / (perpAB - perpBC);
+    cy = midAB[1] + perpAB*(cx - midAB[0]);
+  }
+  const r = Math.sqrt((cx-A[0])**2 + (cy-A[1])**2);
+  return {midAB, midBC, perpAB, perpBC, centre:[cx,cy], radius:r};
+}
+
+// Canvas coordinate transform
+let scale, ox, oy;
+function setupTransform(pts, data) {
+  const allX = [pts.A[0],pts.B[0],pts.C[0],data.centre[0]];
+  const allY = [pts.A[1],pts.B[1],pts.C[1],data.centre[1]];
+  const minX = Math.min(...allX) - data.radius - 1;
+  const maxX = Math.max(...allX) + data.radius + 1;
+  const minY = Math.min(...allY) - data.radius - 1;
+  const maxY = Math.max(...allY) + data.radius + 1;
+  const rangeX = maxX - minX, rangeY = maxY - minY;
+  scale = Math.min((W-60)/rangeX, (H-60)/rangeY);
+  ox = W/2 - scale*(minX+maxX)/2;
+  oy = H/2 + scale*(minY+maxY)/2;
+}
+
+function tx(x) { return ox + scale*x; }
+function ty(y) { return oy - scale*y; }
+
+function drawGrid() {
+  ctx.strokeStyle = '#161622';
+  ctx.lineWidth = 1;
+  // axes
+  ctx.strokeStyle = '#1e1e30';
+  ctx.beginPath(); ctx.moveTo(0, ty(0)); ctx.lineTo(W, ty(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx(0), 0); ctx.lineTo(tx(0), H); ctx.stroke();
+}
+
+function drawPoint(x, y, color, label) {
+  const px = tx(x), py = ty(y);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.font = 'bold 13px JetBrains Mono';
+  ctx.fillText(label, px+8, py-6);
+}
+
+function drawLine(x1,y1,x2,y2, color, dash=[]) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(tx(x1),ty(y1)); ctx.lineTo(tx(x2),ty(y2)); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function extendedLine(mx, my, slope, color, dash=[4,4]) {
+  // draw across canvas
+  ctx.strokeStyle = color; ctx.lineWidth = 1.2;
+  ctx.setLineDash(dash);
+  ctx.beginPath();
+  if (Math.abs(slope) > 200 || slope === Infinity) {
+    ctx.moveTo(tx(mx), 0); ctx.lineTo(tx(mx), H);
+  } else {
+    const x0 = (0 - ox)/scale;
+    const x1 = (W - ox)/scale;
+    ctx.moveTo(0, ty(my + slope*(x0-mx)));
+    ctx.lineTo(W, ty(my + slope*(x1-mx)));
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawMidpoint(mx, my, color) {
+  ctx.fillStyle = color;
+  ctx.strokeStyle = '#0a0a0f';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(tx(mx), ty(my), 5, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+}
+
+function render() {
+  ctx.clearRect(0,0,W,H);
+  const pts = getPoints();
+  const data = computeAll(pts);
+  setupTransform(pts, data);
+  drawGrid();
+
+  const {A,B,C} = pts;
+  const {midAB, midBC, perpAB, perpBC, centre, radius} = data;
+
+  // Step 0: just points
+  if (step >= 0) {
+    drawPoint(A[0],A[1],'#f0c94a',`A(${A[0]},${A[1]})`);
+    drawPoint(B[0],B[1],'#f0c94a',`B(${B[0]},${B[1]})`);
+    drawPoint(C[0],C[1],'#f0c94a',`C(${C[0]},${C[1]})`);
+  }
+
+  // Step 1: chord AB + midpoint AB
+  if (step >= 1) {
+    drawLine(A[0],A[1],B[0],B[1],'#4af0a0',[4,3]);
+    drawMidpoint(midAB[0],midAB[1],'#4af0a0');
+    ctx.fillStyle='#4af0a0'; ctx.font='11px JetBrains Mono';
+    ctx.fillText(`M_AB(${midAB[0].toFixed(1)},${midAB[1].toFixed(1)})`, tx(midAB[0])+7, ty(midAB[1])-6);
+  }
+
+  // Step 2: perpendicular bisector of AB
+  if (step >= 2) {
+    extendedLine(midAB[0], midAB[1], perpAB, '#4ab4f0');
+  }
+
+  // Step 3: chord BC + midpoint + bisector
+  if (step >= 3) {
+    drawLine(B[0],B[1],C[0],C[1],'#f04a9a',[4,3]);
+    drawMidpoint(midBC[0],midBC[1],'#f04a9a');
+    ctx.fillStyle='#f04a9a'; ctx.font='11px JetBrains Mono';
+    ctx.fillText(`M_BC(${midBC[0].toFixed(1)},${midBC[1].toFixed(1)})`, tx(midBC[0])+7, ty(midBC[1])-6);
+    extendedLine(midBC[0], midBC[1], perpBC, '#f04a9a');
+  }
+
+  // Step 4: centre
+  if (step >= 4) {
+    ctx.fillStyle='#a04af0'; ctx.strokeStyle='#a04af0';
+    ctx.lineWidth=2;
+    const cx2=tx(centre[0]), cy2=ty(centre[1]);
+    ctx.beginPath(); ctx.moveTo(cx2-8,cy2); ctx.lineTo(cx2+8,cy2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx2,cy2-8); ctx.lineTo(cx2,cy2+8); ctx.stroke();
+    ctx.font='bold 11px JetBrains Mono'; ctx.fillStyle='#a04af0';
+    ctx.fillText(`Centre(${centre[0].toFixed(2)},${centre[1].toFixed(2)})`, cx2+8, cy2-8);
+  }
+
+  // Step 5: circle + radius line
+  if (step >= 5) {
+    ctx.strokeStyle='#f07a4a'; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(tx(centre[0]), ty(centre[1]), scale*radius, 0, Math.PI*2); ctx.stroke();
+    // radius line to A
+    ctx.strokeStyle='#f07a4a44'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(tx(centre[0]),ty(centre[1])); ctx.lineTo(tx(A[0]),ty(A[1])); ctx.stroke();
+    ctx.fillStyle='#f07a4a'; ctx.font='11px JetBrains Mono';
+    ctx.fillText(`r = ${radius.toFixed(2)}`, tx(centre[0])+8, ty(centre[1])+16);
+
+    // show result
+    document.getElementById('resultBox').classList.add('visible');
+    const h = centre[0], k = centre[1], r2 = radius*radius;
+    const hs = h>=0 ? `x − ${h.toFixed(2)}` : `x + ${Math.abs(h).toFixed(2)}`;
+    const ks = k>=0 ? `y − ${k.toFixed(2)}` : `y + ${Math.abs(k).toFixed(2)}`;
+    document.getElementById('resultText').innerHTML =
+      `(${hs})² + (${ks})² = ${r2.toFixed(2)}<br><br>Centre: (${h.toFixed(2)}, ${k.toFixed(2)})<br>Radius: ${radius.toFixed(3)}`;
+  } else {
+    document.getElementById('resultBox').classList.remove('visible');
+  }
+
+  // highlight active step card
+  for (let i=0;i<6;i++) {
+    document.getElementById('s'+i).classList.toggle('active', i===step);
+  }
+}
+
+function goTo(s) { step = s; render(); }
+
+document.getElementById('btnNext').onclick = () => { if(step<5) step++; render(); };
+document.getElementById('btnPrev').onclick = () => { if(step>0) step--; render(); };
+document.getElementById('btnReset').onclick = () => { step=0; render(); };
+
+['ax','ay','bx','by','cx','cy'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { render(); });
+});
+
+render();
+</script>
+</body>
+</html>
